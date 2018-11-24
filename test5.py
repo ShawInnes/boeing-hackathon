@@ -6,6 +6,7 @@
 import numpy as np
 import argparse
 import cv2
+import imutils
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -41,7 +42,8 @@ while True:
  if frame is None:
    break
 
- hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+ hsv = cv2.cvtColor(frame, cv2.COLOR_HSV2BGR) #COLOR_BGR2HSV
+ #hsv = cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)
 
  # if we are supposed to be writing a video to disk, initialize
  # the writer
@@ -61,6 +63,7 @@ while True:
  sh = cv2.getTrackbarPos('sh', 'image')
  vh = cv2.getTrackbarPos('vh', 'image')
 
+# test it out for mask and houses, purple mask, and then find green!
  blurred = cv2.GaussianBlur(hsv, (11, 11), 0)
  mask = cv2.inRange(blurred, (hl, sl, vl), (hh, sh, vh))
  otherMask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
@@ -70,21 +73,25 @@ while True:
  out = cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)
 
  edged = cv2.Canny(blurred, 30, 150)
- contours, hierarchy = cv2.findContours(edged, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+ contours = cv2.findContours(edged.copy(), cv2.RETR_TREE,
+ 	cv2.CHAIN_APPROX_SIMPLE)
+ contours = contours[0] if imutils.is_cv2() else contours[1]
+ #additionalMask, contours, hierarchy = cv2.findContours(edged, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
 
  coins = frame.copy()
  for (i, c) in enumerate(contours):
    rect = cv2.boundingRect(c)
-   if rect[2] < 100 or rect[3] < 100:
+   if rect[2] > 100 or rect[3] > 100:   # means that the cars/houses will detected, assuming approximate max size
      continue
 
    area = cv2.contourArea(c)
    # if area > 3000 and area < 10000:
    x, y, w, h = rect
+   #to separate houses from cars, can distinguish area and draw a circle around the car instead
    cv2.rectangle(coins, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
- cv2.imshow('image', edged)
+ cv2.imshow('image', coins) #coins
 
  key = cv2.waitKey(1) & 0xFF
 
@@ -94,8 +101,8 @@ while True:
 
 
 # check to see if we need to release the video writer pointer
-if writer is not None:
- writer.release()
+if writer is not None:e
+writer.release()
 
 # do a bit of cleanup
 cv2.destroyAllWindows()
