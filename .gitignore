@@ -188,3 +188,11 @@ fabric.properties
 .idea/sonarlint
 
 # End of https://www.gitignore.io/api/pycharm
+
+.DS_Store
+*.mp4
+*.m4v
+*.avi
+
+multiobject-tracking-dlib/
+yolo-object-detection/
