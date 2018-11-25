@@ -72,7 +72,6 @@ while True:
 	edged = cv2.Canny(blurred, 30, 150)
 	contours, hierarchy = cv2.findContours(edged, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-
 	coins = frame.copy()
 	for (i, c) in enumerate(contours):
 		rect = cv2.boundingRect(c)

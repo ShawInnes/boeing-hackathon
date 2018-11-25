@@ -25,44 +25,42 @@ def nothing(x):
 
 cv2.namedWindow('image')
 
-cv2.createTrackbar('hl','image',int(255.0 * 0.191),255,nothing)
-cv2.createTrackbar('hh','image',int(255.0 * 0.490),255,nothing)
-cv2.createTrackbar('sl','image',int(255.0 * 0.081),255,nothing)
-cv2.createTrackbar('sh','image',int(255.0 * 1.000),255,nothing)
-cv2.createTrackbar('vl','image',int(255.0 * 0.108),255,nothing)
-cv2.createTrackbar('vh','image',int(255.0 * 0.629),255,nothing)
+def processYolo(frame):
+	return frame
+
+def processInfrared(frame):
+	return cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)
+
+def processHarris(frame):
+	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	gray = np.float32(gray)
+	dst = cv2.cornerHarris(gray, 2, 3, 0.04)
+	kernel = np.ones((5, 5), np.uint8)
+	dst = cv2.dilate(dst, kernel)
+	frame[dst > 0.01 * dst.max()] = [0, 0, 255]
+	return frame
 
 # loop over frames from the video file stream
 while True:
-	# grab the next frame from the video file
 	(grabbed, frame) = vs.read()
 
 	# check to see if we have reached the end of the video file
 	if frame is None:
 		break
 
-	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-	# if we are supposed to be writing a video to disk, initialize
-	# the writer
-	if args["output"] is not None and writer is None:
-		fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-		writer = cv2.VideoWriter(args["output"], fourcc, 30,
-			(frame.shape[1], frame.shape[0]), True)
-
-	# check to see if we should write the frame to disk
-	if writer is not None:
-		writer.write(frame)
-
-	out = cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)
-
-	cv2.imshow('image', out)
+	frame = processYolo(frame)
+	cv2.imshow('image', frame)
 
 	key = cv2.waitKey(1) & 0xFF
 
 	# if the `q` key was pressed, break from the loop
 	if key == ord("q"):
 		break
+
+	# The following block will pause/unpause
+	if (key == ord('p')):
+		while ((cv2.waitKey(1) & 0xFF) != ord('p')):
+			continue
 
 
 # check to see if we need to release the video writer pointer
