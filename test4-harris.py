@@ -20,10 +20,12 @@ print("[INFO] starting video stream...")
 vs = cv2.VideoCapture(args["video"])
 writer = None
 
+mode = '0'
+
 def nothing(x):
     pass
 
-cv2.namedWindow('image')
+cv2.namedWindow('image', cv2.WINDOW_GUI_EXPANDED)
 
 def processYolo(frame):
 	return frame
@@ -48,7 +50,13 @@ while True:
 	if frame is None:
 		break
 
-	frame = processYolo(frame)
+	if mode == '1':
+		frame = processHarris(frame)
+	elif mode == '2':
+		frame = processYolo(frame)
+	elif mode == '3':
+		frame = processInfrared(frame)
+
 	cv2.imshow('image', frame)
 
 	key = cv2.waitKey(1) & 0xFF
@@ -56,6 +64,13 @@ while True:
 	# if the `q` key was pressed, break from the loop
 	if key == ord("q"):
 		break
+
+	if key == ord("1"):
+		mode = '1'
+	if key == ord("2"):
+		mode = '2'
+	if key == ord("3"):
+		mode = '3'
 
 	# The following block will pause/unpause
 	if (key == ord('p')):
