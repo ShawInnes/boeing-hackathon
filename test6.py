@@ -109,8 +109,16 @@ while True:
        pasteHouse = cv2.resize(house, (w/2, w/2))
        coins[y:y+w/2, x:x+w/2] = pasteHouse
 
+<<<<<<< HEAD:test6.py
 
  cv2.imshow('image', coins)
+=======
+	coins = frame.copy()
+	for (i, c) in enumerate(contours):
+		rect = cv2.boundingRect(c)
+		if rect[2] < 100 or rect[3] < 100:
+			continue
+>>>>>>> yolo:test3-edges.py
 
  key = cv2.waitKey(1) & 0xFF
 
