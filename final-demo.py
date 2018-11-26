@@ -7,16 +7,32 @@ import numpy as np
 import argparse
 import cv2
 import imutils
+import time
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", required=True,	help="path to input video file")
+ap.add_argument("-t", "--tracker", type=str, default="csrt",	help="OpenCV object tracker type")
 args = vars(ap.parse_args())
 
 print("[INFO] starting video stream...")
 vs = cv2.VideoCapture(args["video"])
 
+framecount = 0
 mode = '0'
+
+OPENCV_OBJECT_TRACKERS = {
+	"csrt": cv2.TrackerCSRT_create,
+	"kcf": cv2.TrackerKCF_create,
+	"boosting": cv2.TrackerBoosting_create,
+	"mil": cv2.TrackerMIL_create,
+	"tld": cv2.TrackerTLD_create,
+	"medianflow": cv2.TrackerMedianFlow_create,
+	"mosse": cv2.TrackerMOSSE_create
+}
+
+# initialize OpenCV's special multi-object tracker
+trackers = cv2.MultiTracker_create()
 
 house = cv2.imread("house.png")
 
@@ -69,6 +85,15 @@ def processInfrared(frame):
 	return cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)
 
 def processROI(frame):
+	(success, boxes) = trackers.update(frame)
+
+	# loop over the bounding boxes and draw then on the frame
+	for box in boxes:
+		(x, y, w, h) = [int(v) for v in box]
+		height, width, channel = frame.shape
+		if (x > 0) and (y > 0) and (x + w < width) and (y + h < height):
+			cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
 	return frame
 
 def processEdges(frame):
@@ -115,8 +140,13 @@ while True:
 		frame = processEdges(frame)
 	elif mode == '4':
 		frame = processHouse(frame)
-	elif mode == '5':
-		frame = processHouse(frame)
+
+	frame = processROI(frame)
+
+	framecount = framecount + 1
+
+	if framecount > 661 and framecount < 761:
+		cv2.putText(frame, 'AUSSIE WORLD!!!!', (250, 250), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, 8)
 
 	cv2.imshow('image', frame)
 
@@ -134,6 +164,16 @@ while True:
 		mode = '5'
 	if key == ord("q"):
 		break
+
+	if key == ord("s"):
+		# select the bounding box of the object we want to track (make
+		# sure you press ENTER or SPACE after selecting the ROI)
+		box = cv2.selectROI("image", frame, fromCenter=False, showCrosshair=True)
+
+		# create a new object tracker for the bounding box and add it
+		# to our multi-object tracker
+		tracker = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
+		trackers.add(tracker, frame, box)
 
 	# The following block will pause/unpause
 	if (key == ord('p')):
